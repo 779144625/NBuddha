@@ -13,6 +13,8 @@ class BuddhaSpider(scrapy.Spider):
 
     origin_url = 'https://weibo.com/ajax/statuses/mymblog?uid=2339808364&page='
 
+    page = 1
+
     def parse(self, response):
         page_json = response.text  # 获取字符串
         list_img = json.loads(page_json)['data']['list'][1:]  # 解析list 第一个pass 没有实质性内容
@@ -27,12 +29,12 @@ class BuddhaSpider(scrapy.Spider):
                     url = pic_infos["mw2000"]["url"]  # 得到了高清图片的url
                     # print(url)
                     object_type = 'pic'
-                    # yield scrapy.Request(
-                    #     url=url,
-                    #     callback=self.parse_obj,
-                    #     meta={"type": object_type},
-                    #     dont_filter=True  # 不要过滤相同的url
-                    # )
+                    yield scrapy.Request(
+                        url=url,
+                        callback=self.parse_obj,
+                        meta={"type": object_type},
+                        dont_filter=True  # 不要过滤相同的url
+                    )
             elif "page_info" in pic:
                 print('0'*100)
                 page_info = pic["page_info"]
@@ -48,11 +50,12 @@ class BuddhaSpider(scrapy.Spider):
             else:
                 logging.DEBUG("Cant find page_info or pic_infos")
                 exit(1)
-        #     yield scrapy.Request(
-        #         url=self.origin_url + f'{page}' + '&feature=0',
-        #         callback=self.parse,
-        #         meta={"item": item}
-        #     )
+            page += 1
+            # yield scrapy.Request(
+            #     url=self.origin_url + f'{page}' + '&feature=0',
+            #     callback=self.parse,
+            #     meta={"item": item}
+            # )
 
     def parse_obj(self, response):
         """
@@ -68,8 +71,8 @@ class BuddhaSpider(scrapy.Spider):
             title = url.split('?')[0].split('/')[-1]
             # print('0'*100)
             try:
-                with open(path + '/' + title, 'wb') as pic:
-                    pic.write(response.body)
+                with open(path + '/' + title, 'wb') as video:
+                    video.write(response.body)
             except Exception as e:
                 print(e)
                 exit(1)
